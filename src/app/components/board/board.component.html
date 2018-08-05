@@ -1,0 +1,9 @@
+<table *ngIf="tableSize > 0" style="width: 400px; table-layout: fixed">
+  <tbody>
+  <ng-container  *ngFor="let boardRow of boardCells;  index as i">
+    <tr>
+      <td *ngFor="let board of boardRow" (click)="clickedCell(board)" ngClass="{{board.winningCell? 'winning': ''}}"><div style="text-align: center;">{{board.symbol}}</div></td>
+    </tr>
+  </ng-container>
+  </tbody>
+</table>

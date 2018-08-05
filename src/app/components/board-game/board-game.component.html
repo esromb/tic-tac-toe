@@ -1,0 +1,23 @@
+<p>
+ Tic Tac Toe
+</p>
+<div *ngIf="selectedPlayers === -1 || selectedBoard === -1">
+  <label for="selectedPlayer" >Select players</label>
+  <select [(ngModel)]="selectedPlayers" id="selectedPlayer" (change)="initTheGame($event)">
+    <option *ngFor="let i of [1,2] " value="{{i}}">{{i}}</option>
+  </select>
+
+  <label for="selectedBoardType" >Board Type (3 X3) vs (4X4)</label>
+  <select [(ngModel)]="selectedBoard" id="selectedBoardType" (change)="initTheGame($event)">
+    <option *ngFor="let i of ['3 X 3','4 X 4']; let index = index" value="{{index}}">{{i}}</option>
+  </select>
+</div>
+<div  *ngIf="gameOver">{{message}}</div>
+<app-board *ngIf="selectedPlayers !== -1  && selectedBoard !== -1"
+           [tableSize]="selectedBoard === '0' ? 3 : 4"
+           (clickedElement)="play($event)"></app-board>
+<div *ngIf="selectedPlayers !== -1  && selectedBoard !== -1">
+  <span class="player1">Player 1 {{player1.symbol}}</span>
+  <span class="player2">Player 2 {{player2.symbol}}</span>
+</div>
+<button (click)="refresh()" *ngIf="selectedPlayers !== -1 && selectedBoard !== -1">restart</button>
