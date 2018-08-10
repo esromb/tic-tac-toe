@@ -75,11 +75,11 @@ export class BoardComponent implements OnInit {
        for (let i = 0; i < this.tableSize; i++) {
          this.boardCells[paintingDirection.winningRowOrColumn][i].winningCell = true;
        }
-     } else if (paintingDirection.direction === 'DIAGONALDOWNWARD') {
+     } else if (paintingDirection.direction === 'DIAGONALLEFTTORIGHT') {
        for (let i = 0; i < this.tableSize; i++) {
          this.boardCells[i][i].winningCell = true;
        }
-     } else if (paintingDirection.direction === 'DIAGONALUPNWARD') {
+     } else if (paintingDirection.direction === 'DIAGONALRIGHTTOLEFT') {
        let downwardLoopCount = 0;
        for (let i = this.tableSize - 1; i >= 0 && downwardLoopCount < this.tableSize; i--) {
          this.boardCells[downwardLoopCount][i].winningCell = true;

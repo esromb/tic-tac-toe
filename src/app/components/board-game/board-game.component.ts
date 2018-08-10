@@ -10,7 +10,7 @@ import {Board} from '../board/board';
 })
 export class BoardGameComponent implements OnInit {
 
-  selectedPlayers = -1 ;
+  selectedPlayers = 1 ;
   selectedBoard =  -1;
   isAgainstComputer = false;
   gameOver = false;
@@ -27,7 +27,7 @@ export class BoardGameComponent implements OnInit {
   }
 
   refresh() {
-    this.selectedPlayers = -1 ;
+    this.selectedPlayers = 1 ;
     this.selectedBoard =  -1;
     this.gameOver = false;
     this.isAgainstComputer = false;
@@ -61,7 +61,7 @@ export class BoardGameComponent implements OnInit {
   }
   play(event) {
     let winner = null;
-    if (!this.gameOver) {
+    if (!this.gameOver && !event.selectedCell.selected) {
       const currentPlayer = this.getCurrentPlayer();
       console.log('isAgainstComputer', this.isAgainstComputer);
       if (this.isAgainstComputer && !this.player1.playing && !event.selectedCell.selected) {
@@ -211,11 +211,11 @@ export class BoardGameComponent implements OnInit {
           if (playerOneSelectedValue === loopUntil) {
             found = true;
             winner = this.player1;
-            direction = 'DIAGONALDOWNWARD';
+            direction = 'DIAGONALLEFTTORIGHT';
           } else if (playerTwoSelectedValue === loopUntil) {
             found = true;
             winner = this.player2;
-            direction = 'DIAGONALDOWNWARD';
+            direction = 'DIAGONALLEFTTORIGHT';
           }
         }
         if (!found) {
@@ -236,11 +236,11 @@ export class BoardGameComponent implements OnInit {
           if (playerOneSelectedValue === loopUntil) {
             found = true;
             winner = this.player1;
-            direction = 'DIAGONALUPNWARD';
+            direction = 'DIAGONALRIGHTTOLEFT';
           } else if (playerTwoSelectedValue === loopUntil) {
             found = true;
             winner = this.player2;
-            direction = 'DIAGONALUPNWARD';
+            direction = 'DIAGONALRIGHTTOLEFT';
           }
         }
       }
@@ -287,10 +287,10 @@ export class BoardGameComponent implements OnInit {
           case 'VERTICAL':
             this.markVerticalForComputer(cells, loosingPosition.column, loopUntil);
             break;
-          case 'DIAGONALDOWNWARD':
-            this.markDiagonalDownWardForComputer(cells, loopUntil);
+          case 'DIAGONALLEFTTORIGHT':
+            this.markDIAGONALLEFTTORIGHTForComputer(cells, loopUntil);
             break;
-          case 'DIAGONALUPNWARD':
+          case 'DIAGONALRIGHTTOLEFT':
             this.markDiagonalUpWardForComputer(cells, loopUntil);
             break;
 
@@ -305,10 +305,10 @@ export class BoardGameComponent implements OnInit {
           case 'VERTICAL':
             this.markVerticalForComputer(cells, winningPosition.column, loopUntil);
             break;
-          case 'DIAGONALDOWNWARD':
-            this.markDiagonalDownWardForComputer(cells, loopUntil);
+          case 'DIAGONALLEFTTORIGHT':
+            this.markDIAGONALLEFTTORIGHTForComputer(cells, loopUntil);
             break;
-          case 'DIAGONALUPNWARD':
+          case 'DIAGONALRIGHTTOLEFT':
             this.markDiagonalUpWardForComputer(cells, loopUntil);
             break;
 
@@ -348,14 +348,15 @@ export class BoardGameComponent implements OnInit {
   }
 
   private getLoosingPosition(cells: Board[][], dimension: number) {
-    let opponentSimilarStepDiagonal = 0;
     let skippedDiagonalCell = null;
-    let opponentSimilarStepHorizontal = 0;
-    let opponentSimilarStepVertical = 0;
+    let opponentSimilarStepDiagonal = 0;
     for (let i = 0; i < dimension; i++) {
+      let opponentSimilarStepHorizontal = 0;
+      let opponentSimilarStepVertical = 0;
       let skippedHorizontalCell = null;
       let skippedVerticalCell = null;
       skippedDiagonalCell = null;
+      let columnCounter = 0;
       for (let j = 0; j < dimension; j++) {
           if (cells[i][j].selected && cells[i][j].symbol !== this.player1.symbol) {
             opponentSimilarStepHorizontal++;
@@ -370,49 +371,54 @@ export class BoardGameComponent implements OnInit {
           }
           if (cells[j][i].selected && cells[j][i].symbol !== this.player1.symbol) {
             opponentSimilarStepVertical++;
-          } else {
+          } else if (!cells[j][i].selected) {
             skippedVerticalCell = cells[j][i];
           }
           if (opponentSimilarStepVertical === dimension - 1  && skippedVerticalCell && !skippedVerticalCell.selected) {
             return {row: j, column: i, direction: 'VERTICAL'};
           } else if (opponentSimilarStepVertical === dimension - 1 && skippedVerticalCell == null
             && j + 1 < dimension && !cells[j + 1][i].selected) {
-            return {row: j, column: i, direction: 'VERTICAL'};
+            return {row: j + 1, column: i, direction: 'VERTICAL'};
           }
+        columnCounter++;
       }
       /** diagonal search downward**/
       if (cells[i][i].selected && cells[i][i].symbol !== this.player1.symbol) {
         opponentSimilarStepDiagonal++;
-      } else {
+      } else if (!cells[i][i].selected) {
         skippedDiagonalCell = cells[i][i];
       }
       if (opponentSimilarStepDiagonal === dimension - 1 && skippedDiagonalCell && !skippedDiagonalCell.selected) {
-        return {row: i, column: i, direction: 'DIAGONALDOWNWARD'};
+        return {row: i, column: i, direction: 'DIAGONALLEFTTORIGHT'};
       } else if (opponentSimilarStepDiagonal === dimension - 1 && skippedDiagonalCell == null
         && i + 1 < dimension && !cells[i + 1][i + 1].selected) {
-        return {row: i, column: i, direction: 'DIAGONALDOWNWARD'};
+        return {row: i, column: i, direction: 'DIAGONALLEFTTORIGHT'};
       }
     }
-    let downwardLoopCount = 0;
-    opponentSimilarStepDiagonal = 0;
-    skippedDiagonalCell = null;
-    for (let j = dimension - 1; j >= 0 && downwardLoopCount < dimension; j--) {
-      if (cells[downwardLoopCount][j].selected && cells[downwardLoopCount][j].symbol !== this.player1.symbol) {
-        opponentSimilarStepDiagonal++;
-      } else {
-        skippedDiagonalCell = cells[downwardLoopCount][j];
-      }
-      if (opponentSimilarStepDiagonal === dimension - 1 && skippedDiagonalCell && !skippedDiagonalCell.selected) {
-        return {row: downwardLoopCount, column: j, direction: 'DIAGONALUPNWARD'};
-      } else if (opponentSimilarStepDiagonal === dimension - 1 && skippedDiagonalCell == null
-        && j - 1 >= 0 && downwardLoopCount + 1 < dimension && !cells[downwardLoopCount + 1][j - 1].selected) {
-        return {row: downwardLoopCount, column: j, direction: 'DIAGONALUPNWARD'};
-      }
-        downwardLoopCount++;
+
+    return this.getDownWardLoosingOrWinningRightToLeftPosition(cells, dimension, this.player1);
+  }
+  private getDownWardLoosingOrWinningRightToLeftPosition(cells: Board[][], loopUntil: number, player: Player) {
+    let opponentSimilarStepVertical = 0;
+    let skippedDiagonalCell = null;
+    let skippedRow = 0, skippedColumn = 0;
+    for (let i = 0, j = loopUntil - 1; i < loopUntil && j >= 0;  j--, i++) {
+        if (cells[i][j].selected && cells[i][j].symbol !== player.symbol) {
+          opponentSimilarStepVertical++;
+        } else if (!cells[i][j].selected) {
+          skippedDiagonalCell = cells[i][j];
+          skippedRow = i;
+          skippedColumn = j;
+        }
+        if (opponentSimilarStepVertical === loopUntil - 1 && skippedDiagonalCell == null
+           && i + 1 < loopUntil && j - 1 > 0 && !cells[i +  1][j - 1].selected) {
+          return {row: i + 1, column: j - 1, direction: 'DIAGONALRIGHTTOLEFT'};
+        } else if (opponentSimilarStepVertical === loopUntil - 1 && skippedDiagonalCell && !skippedDiagonalCell.selected) {
+          return {row: skippedRow, column: skippedColumn, direction: 'DIAGONALRIGHTTOLEFT'};
+        }
     }
     return null;
   }
-
   private markHorizontalForComputer(cells: Board[][], row: number, loopUntil: number) {
     for (let i = 0; i < loopUntil; i++) {
       if (!cells[row][i].selected) {
@@ -433,7 +439,7 @@ export class BoardGameComponent implements OnInit {
     }
   }
 
-  private markDiagonalDownWardForComputer(cells: Board[][], loopUntil: number) {
+  private markDIAGONALLEFTTORIGHTForComputer(cells: Board[][], loopUntil: number) {
     for (let i = 0; i < loopUntil; i++) {
       if (!cells[i][i].selected) {
         cells[i][i].symbol = this.player1.symbol;
@@ -477,7 +483,7 @@ export class BoardGameComponent implements OnInit {
         }
         if (cells[j][i].selected && cells[j][i].symbol === this.player1.symbol) {
           computerSimilarStepVertical++;
-        } else {
+        } else if (!cells[j][i].selected) {
           skippedVerticalCell = cells[j][i];
         }
         if (computerSimilarStepVertical === dimension - 1 && skippedVerticalCell && !skippedVerticalCell.selected) {
@@ -490,14 +496,14 @@ export class BoardGameComponent implements OnInit {
       /** diagonal search downward**/
       if (cells[i][i].selected && cells[i][i].symbol === this.player1.symbol) {
         computerSimilarStepDiagonal++;
-      } else {
+      } else if (!cells[i][i].selected) {
         skippedDiagonalCell = cells[i][i];
       }
       if (computerSimilarStepDiagonal === dimension - 1 && skippedDiagonalCell && !skippedDiagonalCell.selected) {
-        return {row: i, column: i, direction: 'DIAGONALDOWNWARD'};
+        return {row: i, column: i, direction: 'DIAGONALLEFTTORIGHT'};
       } else if (computerSimilarStepDiagonal === dimension - 1
         && skippedDiagonalCell == null && i + 1 < dimension && !cells[i + 1][i + 1].selected) {
-        return {row: i, column: i, direction: 'DIAGONALDOWNWARD'};
+        return {row: i, column: i, direction: 'DIAGONALLEFTTORIGHT'};
       }
     }
     let downwardLoopCount = 0;
@@ -510,12 +516,12 @@ export class BoardGameComponent implements OnInit {
         skippedDiagonalCell = cells[downwardLoopCount][j];
       }
       if (computerSimilarStepDiagonal === dimension - 1 && skippedDiagonalCell && !skippedDiagonalCell.selected) {
-        return {row: downwardLoopCount, column: j, direction: 'DIAGONALUPNWARD'};
+        return {row: downwardLoopCount, column: j, direction: 'DIAGONALRIGHTTOLEFT'};
       } else if (computerSimilarStepDiagonal === dimension - 1
         && skippedDiagonalCell == null && downwardLoopCount + 1 < dimension
         && j - 1 < dimension
         && !cells[j - 1][j - 1].selected) {
-        return {row: downwardLoopCount, column: j, direction: 'DIAGONALDOWNWARD'};
+        return {row: downwardLoopCount, column: j, direction: 'DIAGONALLEFTTORIGHT'};
       }
       downwardLoopCount++;
     }
