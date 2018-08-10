@@ -47,7 +47,6 @@ export class BoardGameComponent implements OnInit {
         this.player1.symbol = 'O';
         this.player2.symbol = 'X';
       }
-      console.log(this.selectedPlayers );
       /** Make the first player a computer **/
       if (Number(this.selectedPlayers) === 1 ) {
         console.log('this.selectedPlayers === 1', true);
@@ -278,8 +277,9 @@ export class BoardGameComponent implements OnInit {
     /** this is the tic tac toe from computer */
     if (cells && this.selectedPlayers > 0 && this.selectedBoard > -1) {
       const loopUntil = Number(this.selectedBoard) === 0 ? 3 : 4;
+      const winningPosition = this.chooseWinningStrategy(cells, loopUntil);
       const loosingPosition = this.getLoosingPosition(cells, loopUntil);
-      if (loosingPosition && loosingPosition.direction !== '') {
+      if (winningPosition == null && loosingPosition && loosingPosition.direction !== '') {
         switch (loosingPosition.direction) {
           case 'HORIZONTAL':
             this.markHorizontalForComputer(cells, loosingPosition.row, loopUntil);
@@ -297,7 +297,6 @@ export class BoardGameComponent implements OnInit {
         }
         return;
       }
-      const winningPosition = this.chooseWinningStrategy(cells, loopUntil);
       if (winningPosition && winningPosition.direction !== '') {
         switch (winningPosition.direction) {
           case 'HORIZONTAL':
@@ -316,16 +315,44 @@ export class BoardGameComponent implements OnInit {
         }
         return;
       }
-
+      for (let i = 0; i < loopUntil; i++) {
+        for (let j = 0; j < loopUntil; j++) {
+          if (cells[i][j].selected &&
+            cells[i][j].symbol === this.player1.symbol &&
+            j + 1 < loopUntil &&
+            !cells[i][j + 1].selected) {
+            cells[i][j + 1].selected = true;
+            cells[i][j + 1].symbol = this.player1.symbol;
+            return;
+          }
+          if (!cells[j][i].selected &&
+            cells[j][i].symbol === this.player1.symbol &&
+            i + 1 < loopUntil &&
+            !cells[j][i + 1].selected) {
+            cells[j][i + 1].symbol = this.player1.symbol;
+            return;
+          }
+        }
+      }
+      for (let i = 0; i < loopUntil; i++) {
+        for (let j = 0; j < loopUntil; j++) {
+          if (!cells[i][j].selected) {
+            cells[i][j].selected = true;
+            cells[i][j].symbol = this.player1.symbol;
+            return;
+          }
+        }
+      }
+      return;
     }
   }
 
   private getLoosingPosition(cells: Board[][], dimension: number) {
     let opponentSimilarStepDiagonal = 0;
     let skippedDiagonalCell = null;
+    let opponentSimilarStepHorizontal = 0;
+    let opponentSimilarStepVertical = 0;
     for (let i = 0; i < dimension; i++) {
-      let opponentSimilarStepHorizontal = 0;
-      let opponentSimilarStepVertical = 0;
       let skippedHorizontalCell = null;
       let skippedVerticalCell = null;
       skippedDiagonalCell = null;
@@ -347,10 +374,10 @@ export class BoardGameComponent implements OnInit {
             skippedVerticalCell = cells[j][i];
           }
           if (opponentSimilarStepVertical === dimension - 1  && skippedVerticalCell && !skippedVerticalCell.selected) {
-            return {row: i, column: j, direction: 'VERTICAL'};
+            return {row: j, column: i, direction: 'VERTICAL'};
           } else if (opponentSimilarStepVertical === dimension - 1 && skippedVerticalCell == null
-            && i + 1 < dimension && !cells[i + 1][j].selected) {
-            return {row: i, column: j, direction: 'VERTICAL'};
+            && j + 1 < dimension && !cells[j + 1][i].selected) {
+            return {row: j, column: i, direction: 'VERTICAL'};
           }
       }
       /** diagonal search downward**/
@@ -445,7 +472,7 @@ export class BoardGameComponent implements OnInit {
         if (computerSimilarStepHorizontal === dimension - 1 && skippedHorizontalCell && !skippedHorizontalCell.selected) {
           return {row: i, column: j, direction: 'HORIZONTAL'};
         } else if (computerSimilarStepHorizontal === dimension - 1
-          && skippedHorizontalCell == null && j + 1 < dimension && !cells[i][j].selected) {
+          && skippedHorizontalCell == null && j + 1 < dimension && !cells[i][j + 1].selected) {
           return {row: i, column: j, direction: 'HORIZONTAL'};
         }
         if (cells[j][i].selected && cells[j][i].symbol === this.player1.symbol) {
@@ -456,8 +483,8 @@ export class BoardGameComponent implements OnInit {
         if (computerSimilarStepVertical === dimension - 1 && skippedVerticalCell && !skippedVerticalCell.selected) {
           return {row: j, column: i, direction: 'VERTICAL'};
         } else if (computerSimilarStepVertical === dimension - 1
-          && skippedVerticalCell == null && j + 1 < dimension && !cells[j][i].selected) {
-          return {row: j, column: i, direction: 'HORIZONTAL'};
+          && skippedVerticalCell == null && j + 1 < dimension && !cells[j + 1][i].selected) {
+          return {row: j, column: i, direction: 'VERTICAL'};
         }
       }
       /** diagonal search downward**/
@@ -469,7 +496,7 @@ export class BoardGameComponent implements OnInit {
       if (computerSimilarStepDiagonal === dimension - 1 && skippedDiagonalCell && !skippedDiagonalCell.selected) {
         return {row: i, column: i, direction: 'DIAGONALDOWNWARD'};
       } else if (computerSimilarStepDiagonal === dimension - 1
-        && skippedDiagonalCell == null && i + 1 < dimension && !cells[i][i].selected) {
+        && skippedDiagonalCell == null && i + 1 < dimension && !cells[i + 1][i + 1].selected) {
         return {row: i, column: i, direction: 'DIAGONALDOWNWARD'};
       }
     }
@@ -487,42 +514,10 @@ export class BoardGameComponent implements OnInit {
       } else if (computerSimilarStepDiagonal === dimension - 1
         && skippedDiagonalCell == null && downwardLoopCount + 1 < dimension
         && j - 1 < dimension
-        && !cells[downwardLoopCount + 1][j - 1].selected) {
+        && !cells[j - 1][j - 1].selected) {
         return {row: downwardLoopCount, column: j, direction: 'DIAGONALDOWNWARD'};
       }
       downwardLoopCount++;
     }
-    let actionTaken = false;
-    for (let i = 0; i < dimension; i++) {
-      for (let j = 0; j < dimension; j++) {
-        if (cells[i][j].selected &&
-          cells[i][j].symbol === this.player1.symbol &&
-            j + 1 < dimension &&
-          !cells[i][j + 1].selected) {
-          cells[i][j + 1].selected = true;
-          cells[i][j + 1].symbol = this.player1.symbol;
-          actionTaken = true;
-          return null;
-        }
-        if (!cells[j][i].selected &&
-          cells[j][i].symbol === this.player1.symbol &&
-          i + 1 < dimension &&
-          !cells[j][i + 1].selected) {
-          cells[j][i + 1].symbol = this.player1.symbol;
-          actionTaken = true;
-          return null;
-        }
-      }
-    }
-    for (let i = 0; i < dimension; i++) {
-      for (let j = 0; j < dimension; j++) {
-        if (!cells[i][j].selected) {
-          cells[i][j].selected = true;
-          cells[i][j].symbol = this.player1.symbol;
-          return null;
-        }
-      }
-    }
-    return null;
   }
 }
