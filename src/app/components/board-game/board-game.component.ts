@@ -494,7 +494,7 @@ export class BoardGameComponent implements OnInit {
         }
       }
       /** diagonal search downward**/
-      if (cells[i][i].selected && cells[i][i].symbol === this.player1.symbol) {
+      if (cells[i][i].selected && cells[i][i].symbol !== this.player1.symbol) {
         computerSimilarStepDiagonal++;
       } else if (!cells[i][i].selected) {
         skippedDiagonalCell = cells[i][i];
