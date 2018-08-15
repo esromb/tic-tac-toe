@@ -1,6 +1,9 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { BoardGameComponent } from './board-game.component';
+import {BoardGameServiceService} from '../../services/board-game-service.service';
+import {BoardComponent} from '../board/board.component';
+import {AppModule} from '../../app.module';
 
 describe('BoardGameComponent', () => {
   let component: BoardGameComponent;
@@ -8,7 +11,9 @@ describe('BoardGameComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ BoardGameComponent ]
+      imports: [AppModule],
+      declarations: [],
+      providers: [BoardGameServiceService]
     })
     .compileComponents();
   }));
